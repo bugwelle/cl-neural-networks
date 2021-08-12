@@ -7,13 +7,20 @@ Introduction to Neural Networks and Sequence-To-Sequence Learning at the Heidelb
 ```sh
 git clone git@github.com:bugwelle/cl-neural-networks.git
 cd cl-neural-networks
+
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies for our scripts
+pip3 install -r requirements.txt
+
 # Install JoeyNMT dependencies
 cd speech2text
-pip3 install --user -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
-Download the German voice dataset from <https://commonvoice.mozilla.org/en/datasets>.
-Move it to `data/`. As of 2021-08-12, the dataset you get is called `cv-corpus-7.0-2021-07-21-de.tar.gz`.
+To create the dataset, see `data/README.md`.
 
 
 ## Notes on this project
