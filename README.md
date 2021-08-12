@@ -35,3 +35,6 @@ git clone https://github.com/joeynmt/joeynmt.git speech2text
 # Remove git folder and docs
 rm -rf speech2text/.git speech2text/.github speech2text/docs
 ```
+
+If you want to see what we've changed to JoeyNMT, have a look at this diff:
+<https://github.com/bugwelle/cl-neural-networks/compare/ee3b71883b100ced0118366dac46f57f804773dc...main>
