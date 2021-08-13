@@ -67,19 +67,10 @@ def load_audio_data(data_cfg: dict, datasets: list = None)\
 
     tok_fun = lambda s: list(s) if level == "char" else s.split()
 
-    src_field = data.RawField()
-    trg_field = data.Field(init_token=BOS_TOKEN, eos_token=EOS_TOKEN,
-                           pad_token=PAD_TOKEN, tokenize=tok_fun,
-                           unk_token=UNK_TOKEN,
-                           batch_first=True, lower=lowercase,
-                           include_lengths=True)
-
     train_data = None
     if "train" in datasets and train_path is not None:
         logger.info("Loading training data...")
-        train_data = AudioDataset(path=train_path,
-                                       # fields=(src_field, trg_field),
-                                        tsv_name="train")
+        train_data = AudioDataset(path=train_path, tsv_name="train")
 
         random_train_subset = data_cfg.get("random_train_subset", -1)
         if random_train_subset > -1:
@@ -112,24 +103,17 @@ def load_audio_data(data_cfg: dict, datasets: list = None)\
     dev_data = None
     if "dev" in datasets and dev_path is not None:
         logger.info("Loading dev data...")
-        dev_data = AudioDataset(path=dev_path, 
-                                      # fields=(src_field, trg_field),
-                                      tsv_name="train")
+        dev_data = AudioDataset(path=dev_path, tsv_name="train")
 
     test_data = None
     if "test" in datasets and test_path is not None:
         logger.info("Loading test data...")
         # check if target exists
         if os.path.isfile(test_path + "." + trg_lang):
-            test_data = AudioDataset(path=test_path,
-                # fields=(src_field, trg_field),
-                tsv_name="test")
+            test_data = AudioDataset(path=test_path, tsv_name="test")
         else:
             # no target is given -> create dataset from src only
-            test_data = MonoAudioDataset(path=test_path, ext="." + src_lang,
-                                    field=src_field)
-    src_field.vocab = src_vocab
-    trg_field.vocab = trg_vocab
+            test_data = MonoAudioDataset(path=test_path, ext="." + src_lang)
     logger.info("Data loaded.")
     return train_data, dev_data, test_data, src_vocab, trg_vocab
 
