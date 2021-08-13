@@ -19,6 +19,7 @@ from joeynmt.model import build_model, Model, _DataParallel
 from joeynmt.search import run_batch
 from joeynmt.batch import Batch
 from joeynmt.data import load_data, make_data_iter, MonoDataset
+from joeynmt.data_audio import load_audio_data
 from joeynmt.constants import UNK_TOKEN, PAD_TOKEN, EOS_TOKEN
 from joeynmt.vocabulary import Vocabulary
 
@@ -287,9 +288,14 @@ def test(cfg_file,
         except IndexError:
             step = "best"
 
+    # load the data: Decide which function to use
+    load_data_fct = load_data
+    if cfg["type"] == "audio":
+        load_data_fct = load_audio_data
+
     # load the data
     if datasets is None:
-        _, dev_data, test_data, src_vocab, trg_vocab = load_data(
+        _, dev_data, test_data, src_vocab, trg_vocab = load_data_fct(
             data_cfg=cfg["data"], datasets=["dev", "test"])
         data_to_predict = {"dev": dev_data, "test": test_data}
     else:  # avoid to load data again

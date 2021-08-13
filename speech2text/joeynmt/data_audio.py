@@ -12,14 +12,15 @@ import csv
 
 from torchtext.legacy.datasets import TranslationDataset
 from torchtext.legacy import data
-from torchtext.legacy.data import Dataset, Iterator, Field
+from torchtext.legacy.data import  Iterator, Field # Note: I've removed Dataset
+from torch.utils.data import Dataset
 
 from typing import List, Dict, Tuple, Union
 from torch import Tensor
 import torchaudio
 
 from joeynmt.constants import UNK_TOKEN, EOS_TOKEN, BOS_TOKEN, PAD_TOKEN
-from joeynmt.vocabulary import build_vocab, Vocabulary
+from joeynmt.vocabulary import build_vocab_audio, Vocabulary
 
 logger = logging.getLogger(__name__)
 
@@ -93,10 +94,8 @@ def load_audio_data(data_cfg: dict, datasets: list = None)\
     assert (train_data is not None) or (trg_vocab_file is not None)
 
     logger.info("Building vocabulary...")
-    src_vocab = build_vocab(field="src", min_freq=src_min_freq,
-                            max_size=src_max_size,
-                            dataset=train_data, vocab_file=src_vocab_file)
-    trg_vocab = build_vocab(field="trg", min_freq=trg_min_freq,
+    src_vocab = Vocabulary() # TODO: Was genau muss das dann sein?
+    trg_vocab = build_vocab_audio(min_freq=trg_min_freq,
                             max_size=trg_max_size,
                             dataset=train_data, vocab_file=trg_vocab_file)
 
@@ -166,7 +165,7 @@ class MonoAudioDataset(Dataset):
 class AudioDataset(Dataset):
     """Dataset for our audio"""
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._walker)
 
     def __init__(self, path: str, tsv_name: str) -> None:
@@ -187,7 +186,7 @@ class AudioDataset(Dataset):
             from the TSV file with the following keys: ``path``, ``sentence``
         """
         line = self._walker[n]
-        return self.load_commonvoice_item(n, line[0])
+        return self._load_commonvoice_item(n, line[0])
 
     # Taken from https://github.com/pytorch/audio/blob/8a347b62cf5c907d2676bdc983354834e500a282/torchaudio/datasets/commonvoice.py#L12
     # This is a modified version.

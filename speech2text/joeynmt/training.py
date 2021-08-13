@@ -30,6 +30,7 @@ from joeynmt.model import Model, _DataParallel
 from joeynmt.prediction import validate_on_data
 from joeynmt.loss import XentLoss
 from joeynmt.data import load_data, make_data_iter
+from joeynmt.data_audio import load_audio_data
 from joeynmt.builders import build_optimizer, build_scheduler, \
     build_gradient_clipper
 from joeynmt.prediction import test
@@ -771,8 +772,12 @@ def train(cfg_file: str, skip_test: bool = False) -> None:
     # set the random seed
     set_seed(seed=cfg["training"].get("random_seed", 42))
 
-    # load the data
-    train_data, dev_data, test_data, src_vocab, trg_vocab = load_data(
+    # load the data: Decide which function to use
+    load_data_fct = load_data
+    if cfg["type"] == "audio":
+        load_data_fct = load_audio_data
+
+    train_data, dev_data, test_data, src_vocab, trg_vocab = load_data_fct(
         data_cfg=cfg["data"])
 
     # build an encoder-decoder model
