@@ -112,7 +112,7 @@ def load_audio_data(data_cfg: dict, datasets: list = None)\
             test_data = AudioDataset(path=test_path, tsv_name="test")
         else:
             # no target is given -> create dataset from src only
-            test_data = MonoAudioDataset(path=test_path, ext="." + src_lang)
+            test_data = MonoAudioDataset(path=test_path, tsv_name="test")
     logger.info("Data loaded.")
     return train_data, dev_data, test_data, src_vocab, trg_vocab
 
@@ -123,41 +123,20 @@ global max_src_in_batch, max_tgt_in_batch
 class MonoAudioDataset(Dataset):
     """Defines a dataset for machine translation without targets."""
 
-    @staticmethod
-    def sort_key(ex):
-        return len(ex.src)
 
-    def __init__(self, path: str, ext: str, field: Field, **kwargs) -> None:
-        """
-        Create a monolingual dataset (=only sources) given path and field.
+    def __init__(self, path: str, tsv_name: str, **kwargs) -> None:
+        self.examples = []
+        for file in os.listdir(f'{path}/{tsv_name}_audio'):
+            waveform, sample_rate = torchaudio.load(f'{path}/{tsv_name}_audio/{file}')
+            feature = torchaudio.transforms.MFCC(sample_rate=sample_rate)(waveform)
+            featureT = feature.T
 
-        :param path: Prefix of path to the data file
-        :param ext: Containing the extension to path for this language.
-        :param field: Containing the fields that will be used for data.
-        :param kwargs: Passed to the constructor of data.Dataset.
-        """
+            self.examples.append(featureT)
 
-        fields = [('src', field)]
+    def __len__(self):
+        return len(self.examples)
 
-        if hasattr(path, "readline"):  # special usage: stdin
-            src_file = path
-        else:
-            src_path = os.path.expanduser(path + ext)
-            # Because the file can be stdin which doesn't need to be opened,
-            # easier not to use with here.
-            # pylint: disable=consider-using-with
-            src_file = open(src_path, encoding="utf-8")
-
-        examples = []
-        for src_line in src_file:
-            src_line = src_line.strip()
-            if src_line != '':
-                examples.append(data.Example.fromlist(
-                    [src_line], fields))
-
-        src_file.close()
-
-        super().__init__(examples, fields, **kwargs)
+    
 
 
 # Taken from https://github.com/pytorch/audio/blob/master/torchaudio/datasets/commonvoice.py#L32
