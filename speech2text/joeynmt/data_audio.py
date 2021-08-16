@@ -12,8 +12,7 @@ import csv
 
 from torchtext.legacy.datasets import TranslationDataset
 from torchtext.legacy import data
-from torchtext.legacy.data import  Iterator, Field # Note: I've removed Dataset
-from torch.utils.data import Dataset
+from torchtext.legacy.data import Dataset, Iterator, Field
 
 from typing import List, Dict, Tuple, Union
 from torch import Tensor
@@ -79,8 +78,8 @@ def load_audio_data(data_cfg: dict, datasets: list = None)\
     if "train" in datasets and train_path is not None:
         logger.info("Loading training data...")
         train_data = AudioDataset(path=train_path,
-                                       # fields=(src_field, trg_field),
-                                        tsv_name="train")
+                                  fields=(src_field, trg_field),
+                                  tsv_name="train")
 
         random_train_subset = data_cfg.get("random_train_subset", -1)
         if random_train_subset > -1:
@@ -104,7 +103,7 @@ def load_audio_data(data_cfg: dict, datasets: list = None)\
 
     logger.info("Building vocabulary...")
     src_vocab = Vocabulary() # TODO: Was genau muss das dann sein?
-    trg_vocab = build_vocab_audio(min_freq=trg_min_freq,
+    trg_vocab = build_vocab_audio(field="trg", min_freq=trg_min_freq,
                             max_size=trg_max_size,
                             dataset=train_data, vocab_file=trg_vocab_file)
 
@@ -112,8 +111,8 @@ def load_audio_data(data_cfg: dict, datasets: list = None)\
     if "dev" in datasets and dev_path is not None:
         logger.info("Loading dev data...")
         dev_data = AudioDataset(path=dev_path, 
-                                      # fields=(src_field, trg_field),
-                                      tsv_name="train")
+                                fields=(src_field, trg_field),
+                                tsv_name="train")
 
     test_data = None
     if "test" in datasets and test_path is not None:
@@ -121,12 +120,12 @@ def load_audio_data(data_cfg: dict, datasets: list = None)\
         # check if target exists
         if os.path.isfile(test_path + "." + trg_lang):
             test_data = AudioDataset(path=test_path,
-                # fields=(src_field, trg_field),
+                fields=(src_field, trg_field),
                 tsv_name="test")
         else:
             # no target is given -> create dataset from src only
-            test_data = MonoAudioDataset(path=test_path, ext="." + src_lang,
-                                    field=src_field)
+            test_data = MonoAudioDataset(path=test_path, field=src_field,
+                                    tsv_name="test" )
     src_field.vocab = src_vocab
     trg_field.vocab = trg_vocab
     logger.info("Data loaded.")
@@ -139,57 +138,77 @@ global max_src_in_batch, max_tgt_in_batch
 class MonoAudioDataset(Dataset):
     """Defines a dataset for machine translation without targets."""
 
+    @staticmethod
+    def sort_key(ex):
+        return len(ex.src)
 
-    def __init__(self, path: str, tsv_name: str, **kwargs) -> None:
-        self.examples = []
-        for file in os.listdir(f'{path}/{tsv_name}_audio'):
-            waveform, sample_rate = torchaudio.load(f'{path}/{tsv_name}_audio/{file}')
-            feature = torchaudio.transforms.MFCC(sample_rate=sample_rate)(waveform)
-            featureT = feature.T
+    def __init__(self, path: str, field, tsv_name: str, **kwargs) -> None:
+        examples = []
+        
+        fields = [('src', field)]
 
-            self.examples.append(featureT)
+        self._path = os.fspath(path)
+        self._tsv = os.path.join(self._path, f"{tsv_name}.tsv")
+        self._clips = os.path.join(self._path, f"{tsv_name}_audio")
+        
+        examples = []
+
+        with open(self._tsv, "r") as tsv_:
+            walker = csv.reader(tsv_, delimiter="\t")
+            for index, line in enumerate(walker):
+                # Note: We simply ignore the line content.
+                features = load_and_process_commonvoice_item(self._clips, index)
+                examples.append(data.Example.fromlist( [features], fields ))
+
+        super().__init__(examples, fields, **kwargs)
 
     def __len__(self):
         return len(self.examples)
 
     
 
-
-# Taken from https://github.com/pytorch/audio/blob/master/torchaudio/datasets/commonvoice.py#L32
+# Partially taken from https://github.com/pytorch/audio/blob/master/torchaudio/datasets/commonvoice.py#L32
+# Also based on `torchtext.legacy.datasets.TranslationDataset` to be compatible with JoeyNMT
 # This is a modified version.
 class AudioDataset(Dataset):
     """Dataset for our audio"""
 
-    def __len__(self) -> int:
-        return len(self._walker)
+    @staticmethod
+    def sort_key(ex):
+        return data.interleave_keys(len(ex.src), len(ex.trg))
 
-    def __init__(self, path: str, tsv_name: str) -> None:
+    def __len__(self) -> int:
+        return len(self.examples)
+
+    def __init__(self, path: str, fields, tsv_name: str, **kwargs) -> None:
+
+        # Note: `src` and `trg` are used by JoeyNMT in vocabulary.py
+        if not isinstance(fields[0], (tuple, list)):
+            fields = [('src', fields[0]), ('trg', fields[1])]
+
         self._path = os.fspath(path)
         self._tsv = os.path.join(self._path, f"{tsv_name}.tsv")
         self._clips = os.path.join(self._path, f"{tsv_name}_audio")
         
+        examples = []
+
         with open(self._tsv, "r") as tsv_:
             walker = csv.reader(tsv_, delimiter="\t")
-            self._walker = list(walker)
+            for index, line in enumerate(walker):
+                features = load_and_process_commonvoice_item(self._clips, index)
+                examples.append(data.Example.fromlist( [features, line[0]], fields ))
 
-    def __getitem__(self, n: int) -> Tuple[Tensor, int, Dict[str, str]]:
-        """Load the n-th sample from the dataset.
-        Args:
-            n (int): The index of the sample to be loaded
-        Returns:
-            tuple: ``(waveform, sample_rate, dictionary)``, where dictionary is built
-            from the TSV file with the following keys: ``path``, ``sentence``
-        """
-        line = self._walker[n]
-        return self._load_commonvoice_item(n, line[0])
+        super().__init__(examples, fields, **kwargs)
 
-    # Taken from https://github.com/pytorch/audio/blob/8a347b62cf5c907d2676bdc983354834e500a282/torchaudio/datasets/commonvoice.py#L12
-    # This is a modified version.
-    def _load_commonvoice_item(self, index, sentence: str) -> Tuple[Tensor, int, Dict[str, str]]:
-        
-        filename = os.path.join(self._clips, f"{index}.mp3")
-        waveform, sample_rate = torchaudio.load(filename)
+# Taken from https://github.com/pytorch/audio/blob/8a347b62cf5c907d2676bdc983354834e500a282/torchaudio/datasets/commonvoice.py#L12
+# This is a modified version.
+def load_and_process_commonvoice_item(clips_folder: str, index) -> Tuple[Tensor, int, Dict[str, str]]:
 
-        dic = dict(path=filename, sentence=sentence)
+    # TODO: Some processing of data
 
-        return waveform, sample_rate, dic
+    filename = os.path.join(clips_folder, f"{index}.mp3")
+    waveform, sample_rate = torchaudio.load(filename)
+
+    dic = dict(path=filename)
+
+    return waveform
