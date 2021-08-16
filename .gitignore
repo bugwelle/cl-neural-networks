@@ -1,6 +1,7 @@
 # Data
 *.tar.gz
 *.mp3
+speech_model/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

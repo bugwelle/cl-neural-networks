@@ -44,7 +44,7 @@ training:
     validation_freq: 1000
     logging_freq: 100
     eval_metric: "bleu"
-    model_dir: "reverse_model"
+    model_dir: "speech_model"
     overwrite: True
     shuffle: True
     use_cuda: False

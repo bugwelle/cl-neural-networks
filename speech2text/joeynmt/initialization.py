@@ -151,7 +151,9 @@ def initialize_model(model: nn.Module, cfg: dict, src_padding_idx: int,
                     init_fn_(p)
 
         # zero out paddings
-        model.src_embed.lut.weight.data[src_padding_idx].zero_()
+        # For our speech2text, we don't have a lookup table
+        if hasattr(model.src_embed.lut, 'weight'):
+            model.src_embed.lut.weight.data[src_padding_idx].zero_()
         model.trg_embed.lut.weight.data[trg_padding_idx].zero_()
 
         orthogonal = cfg.get("init_rnn_orthogonal", False)
