@@ -22,8 +22,14 @@ class Batch:
         :param pad_index:
         :param use_cuda:
         """
-        self.src, self.src_length = torch_batch.src
-        self.src_mask = (self.src != pad_index).unsqueeze(1)
+
+        # TODO:
+        # hmmm... Bin mir noch unsicher hier.
+        b = [ i.transpose(0, 1) for i in torch_batch.src ]
+        self.src = torch.nn.utils.rnn.pad_sequence(b, batch_first=True, padding_value=pad_index)
+        self.src_length = torch.full( (self.src.shape[0],), self.src.shape[1], dtype=torch.long)
+        self.src_mask = torch.sum( (self.src != pad_index), dim=2).bool().unsqueeze(1)
+
         self.nseqs = self.src.size(0)
         self.trg_input = None
         self.trg = None

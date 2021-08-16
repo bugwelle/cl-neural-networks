@@ -43,8 +43,13 @@ class Embeddings(nn.Module):
         self.embedding_dim = embedding_dim
         self.scale = scale
         self.vocab_size = vocab_size
-        self.lut = nn.Embedding(vocab_size, self.embedding_dim,
-                                padding_idx=padding_idx)
+        
+        # For our speech2text, we don't really have a vocablary...
+        if vocab_size > padding_idx and embedding_dim > 0:
+            self.lut = nn.Embedding(vocab_size, self.embedding_dim,
+                                    padding_idx=padding_idx)
+        else:
+            self.lut = lambda x: x
 
         if freeze:
             freeze_params(self)
