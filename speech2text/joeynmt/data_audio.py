@@ -2,6 +2,7 @@
 """
 Data module
 """
+from collections import defaultdict
 import sys
 import random
 import os
@@ -23,6 +24,17 @@ from joeynmt.vocabulary import build_vocab_audio, Vocabulary
 
 logger = logging.getLogger(__name__)
 
+class MyCustomVocabulary():
+    def __init__(self):
+        self.stoi = defaultdict()
+        self.stoi["<unk>"] = 0
+        self.stoi["<pad>"] = 1
+        self.stoi["<s>"] = 2
+        self.stoi["</s>"] = 3
+    def len(self):
+        return 0
+    def __len__(self):
+        return 0
 
 def load_audio_data(data_cfg: dict, datasets: list = None)\
         -> (Dataset, Dataset, Optional[Dataset], Vocabulary, Vocabulary):
@@ -102,7 +114,7 @@ def load_audio_data(data_cfg: dict, datasets: list = None)\
     assert (train_data is not None) or (trg_vocab_file is not None)
 
     logger.info("Building vocabulary...")
-    src_vocab = Vocabulary() # TODO: Was genau muss das dann sein?
+    src_vocab = MyCustomVocabulary() # None #Vocabulary() # TODO: Was genau muss das dann sein?
     trg_vocab = build_vocab_audio(field="trg", min_freq=trg_min_freq,
                             max_size=trg_max_size,
                             dataset=train_data, vocab_file=trg_vocab_file)
