@@ -7,7 +7,7 @@ Then run
 
 ```sh
 # From the base directory:
-./scripts/create_train_dataset.py /path/to/cv-corpus-7.0-2021-07-21/de/ --output_path=$(pwd)/data/
+./scripts/create_datasets.py /path/to/cv-corpus-7.0-2021-07-21/de/ --output_path=$(pwd)/data/
 ```
 
 This will create a `train.tsv` as well as copy the audio files to ones that
