@@ -205,12 +205,35 @@ class AudioDataset(Dataset):
 # Taken from https://github.com/pytorch/audio/blob/8a347b62cf5c907d2676bdc983354834e500a282/torchaudio/datasets/commonvoice.py#L12
 # This is a modified version.
 def load_and_process_commonvoice_item(clips_folder: str, index) -> Tuple[Tensor, int, Dict[str, str]]:
-
-    # TODO: Some processing of data
-
     filename = os.path.join(clips_folder, f"{index}.mp3")
     waveform, sample_rate = torchaudio.load(filename)
 
     dic = dict(path=filename)
 
-    return waveform
+    # Values taken from visualization script
+    n_fft = 2048
+    # Length between two STFT windows, see
+    # https://www.wolfram.com/language/12/new-in-audio-processing/audio-short-time-fourier-transform-stft.html
+    hop_length = 512
+    n_mels = 256
+    n_mfcc = 256
+    letter_duration = 0.04 # Had a look at a few examples and they spoke about 50 characters in 3s.
+    uniform_sample_rate =int(hop_length/letter_duration)
+
+    # We need a common sampling rate
+    resampler = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=uniform_sample_rate)
+
+    mfcc_transform = torchaudio.transforms.MFCC(
+        sample_rate=uniform_sample_rate,
+        n_mfcc=n_mfcc,
+        melkwargs={
+            'n_fft': n_fft,
+            'n_mels': n_mels,
+            'hop_length': hop_length,
+            'mel_scale': 'htk',
+        }
+    )
+
+    result = mfcc_transform(resampler(waveform)).squeeze()
+
+    return result
