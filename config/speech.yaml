@@ -62,7 +62,7 @@ model:
     encoder:
         rnn_type: "lstm"
         embeddings:
-            embedding_dim: 16
+            embedding_dim: 1
             scale: False
         hidden_size: 64
         bidirectional: True
@@ -71,7 +71,7 @@ model:
     decoder:
         rnn_type: "lstm"
         embeddings:
-            embedding_dim: 16
+            embedding_dim: 1
             scale: False
         hidden_size: 64
         dropout: 0.1
