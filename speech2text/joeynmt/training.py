@@ -602,11 +602,11 @@ class TrainManager:
                          eval_metric=self.eval_metric,
                          new_best=new_best)
 
-        self._log_examples(sources_raw=[v for v in valid_sources_raw],
-                           sources=valid_sources,
-                           hypotheses_raw=valid_hypotheses_raw,
-                           hypotheses=valid_hypotheses,
-                           references=valid_references)
+        # self._log_examples(sources_raw=[v for v in valid_sources_raw],
+        #                   sources=valid_sources,
+        #                   hypotheses_raw=valid_hypotheses_raw,
+        #                   hypotheses=valid_hypotheses,
+        #                   references=valid_references)
 
         valid_duration = time.time() - valid_start_time
         logger.info(
