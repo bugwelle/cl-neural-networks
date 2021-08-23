@@ -148,7 +148,11 @@ def validate_on_data(model: Model, data: Dataset,
 
         # evaluate with metric on full dataset
         join_char = " " if level in ["word", "bpe"] else ""
-        valid_sources = [join_char.join(s) for s in data.src]
+        cfg = load_config("./speech_model/config.yaml")
+        if cfg["type"] == "audio":
+            valid_sources = None
+        else:
+            valid_sources = [join_char.join(s) for s in data.src]
         valid_references = [join_char.join(t) for t in data.trg]
         valid_hypotheses = [join_char.join(t) for t in decoded_valid]
 
