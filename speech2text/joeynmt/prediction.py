@@ -92,7 +92,7 @@ def validate_on_data(cfg, model: Model, data: Dataset,
         dataset=data, batch_size=batch_size, batch_type=batch_type,
         shuffle=False, train=False)
     valid_sources_raw = data.src
-    pad_index = model.src_vocab.stoi[PAD_TOKEN]
+    pad_index = model.pad_index
     # disable dropout
     model.eval()
     # don't track gradients during validation
