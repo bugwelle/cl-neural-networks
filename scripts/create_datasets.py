@@ -17,7 +17,7 @@ def create_dataset(input_path, input_tsv_name, output_path, output_tsv_name, out
     # Read TSV file into DataFrame df
     df = pd.read_csv(input_tsv_file, sep="\t")
     #& (df.path.str.contains('common_voice_de_1\d{7}'))
-    df = df[(df.down_votes < 2) & (df.accent.isnull()) & (df.locale == "de") & (df.sentence.str.len() < 40) & (df.gender == 'male') & (~df.sentence.str.contains("[^\x00-\x7FäÄöÖüÜß]", na=False))]
+    df = df[(df.down_votes < 3) & (df.accent.isnull()) & (df.locale == "de") & (df.sentence.str.len() < 75) & (df.gender == 'male') & (~df.sentence.str.contains("[^\x00-\x7FäÄöÖüÜß]", na=False))]
     df["sentence"] = df["sentence"].str.lower()
 
     df = df.sort_values(by="up_votes", ascending=False).head(max_files)
@@ -58,7 +58,7 @@ def main():
     if args.output_path == None or args.output_path == "":
         raise RuntimeError("Missing output path")
 
-    create_dataset(args.path, "train.tsv", args.output_path, "train.tsv", "train_audio", 1000)
+    create_dataset(args.path, "train.tsv", args.output_path, "train.tsv", "train_audio", 10000)
     create_dataset(args.path, "test.tsv", args.output_path, "test.tsv", "test_audio", 100)
 
 if __name__ == "__main__":
