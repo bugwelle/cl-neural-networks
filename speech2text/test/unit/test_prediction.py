@@ -89,7 +89,7 @@ class TestPrediction(unittest.TestCase):
          sacrebleu, _, _) = self.parsed_cfg
 
         (score, loss, ppl, sources, sources_raw, references, hypotheses,
-         hypotheses_raw, attention_scores) = validate_on_data(
+         hypotheses_raw, attention_scores) = validate_on_data(self.cfg,
             self.model, data=self.test_data, batch_size=batch_size,
             batch_type=batch_type, level=level, use_cuda=use_cuda,
             max_output_length=max_output_length, eval_metric=None,

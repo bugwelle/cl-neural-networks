@@ -63,6 +63,8 @@ class TrainManager:
         train_config = config["training"]
         self.batch_class = batch_class
 
+        self.cfg = config
+
         # files for logging and storing
         self.model_dir = train_config["model_dir"]
         assert os.path.exists(self.model_dir)
@@ -547,7 +549,7 @@ class TrainManager:
         valid_score, valid_loss, valid_ppl, valid_sources, \
         valid_sources_raw, valid_references, valid_hypotheses, \
         valid_hypotheses_raw, valid_attention_scores = \
-            validate_on_data(
+            validate_on_data(self.cfg,
                 batch_size=self.eval_batch_size,
                 batch_class=self.batch_class,
                 data=valid_data,
@@ -602,6 +604,8 @@ class TrainManager:
                          eval_metric=self.eval_metric,
                          new_best=new_best)
 
+        # Commented out because we can't visualize audio files.
+        #
         # self._log_examples(sources_raw=[v for v in valid_sources_raw],
         #                   sources=valid_sources,
         #                   hypotheses_raw=valid_hypotheses_raw,

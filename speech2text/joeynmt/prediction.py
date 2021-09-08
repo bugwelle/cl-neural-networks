@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-arguments,too-many-locals,no-member,too-many-branches
-def validate_on_data(model: Model, data: Dataset,
+def validate_on_data(cfg, model: Model, data: Dataset,
                      batch_size: int,
                      use_cuda: bool, max_output_length: int,
                      level: str, eval_metric: Optional[str],
@@ -148,11 +148,12 @@ def validate_on_data(model: Model, data: Dataset,
 
         # evaluate with metric on full dataset
         join_char = " " if level in ["word", "bpe"] else ""
-        cfg = load_config("./speech_model/config.yaml")
+
         if cfg["type"] == "audio":
             valid_sources = None
         else:
             valid_sources = [join_char.join(s) for s in data.src]
+        
         valid_references = [join_char.join(t) for t in data.trg]
         valid_hypotheses = [join_char.join(t) for t in decoded_valid]
 
@@ -336,7 +337,7 @@ def test(cfg_file,
 
         #pylint: disable=unused-variable
         score, loss, ppl, sources, sources_raw, references, hypotheses, \
-        hypotheses_raw, attention_scores = validate_on_data(
+        hypotheses_raw, attention_scores = validate_on_data(cfg,
             model, data=data_set, batch_size=batch_size,
             batch_class=batch_class, batch_type=batch_type, level=level,
             max_output_length=max_output_length, eval_metric=eval_metric,
@@ -415,12 +416,14 @@ def translate(cfg_file: str,
             os.remove(tmp_filename)
 
         return test_data
+        
+    cfg = load_config(cfg_file)
 
     def _translate_data(test_data):
         """ Translates given dataset, using parameters from outer scope. """
         # pylint: disable=unused-variable
         score, loss, ppl, sources, sources_raw, references, hypotheses, \
-        hypotheses_raw, attention_scores = validate_on_data(
+        hypotheses_raw, attention_scores = validate_on_data(cfg,
             model, data=test_data, batch_size=batch_size,
             batch_class=batch_class, batch_type=batch_type, level=level,
             max_output_length=max_output_length, eval_metric="",
@@ -429,7 +432,6 @@ def translate(cfg_file: str,
             bpe_type=bpe_type, sacrebleu=sacrebleu, n_gpu=n_gpu, n_best=n_best)
         return hypotheses
 
-    cfg = load_config(cfg_file)
     model_dir = cfg["training"]["model_dir"]
 
     _ = make_logger(model_dir, mode="translate")
