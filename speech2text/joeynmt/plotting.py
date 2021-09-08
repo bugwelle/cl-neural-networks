@@ -44,8 +44,8 @@ def plot_heatmap(scores: np.array, column_labels: List[str],
     labelsize = 25 * (10 / max(x_sent_len, y_sent_len))
 
     # font config
-    rcParams['xtick.labelsize'] = labelsize
-    rcParams['ytick.labelsize'] = labelsize
+    rcParams['xtick.labelsize'] = 1
+    rcParams['ytick.labelsize'] = 1
     #rcParams['font.family'] = "sans-serif"
     #rcParams['font.sans-serif'] = ["Fira Sans"]
     #rcParams['font.weight'] = "regular"
