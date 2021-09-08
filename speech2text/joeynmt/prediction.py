@@ -92,7 +92,10 @@ def validate_on_data(cfg, model: Model, data: Dataset,
         dataset=data, batch_size=batch_size, batch_type=batch_type,
         shuffle=False, train=False)
     valid_sources_raw = data.src
-    pad_index = model.pad_index
+    if cfg["type"] == "audio":
+        pad_index = model.pad_index
+    else:
+        pad_index = model.src_vocab.stoi[PAD_TOKEN]
     # disable dropout
     model.eval()
     # don't track gradients during validation
@@ -159,8 +162,9 @@ def validate_on_data(cfg, model: Model, data: Dataset,
 
         # post-process
         if level == "bpe" and postprocess:
-            valid_sources = [bpe_postprocess(s, bpe_type=bpe_type)
-                             for s in valid_sources]
+            if cfg["type"] == "audio":
+                valid_sources = [bpe_postprocess(s, bpe_type=bpe_type)
+                                 for s in valid_sources]
             valid_references = [bpe_postprocess(v, bpe_type=bpe_type)
                                 for v in valid_references]
             valid_hypotheses = [bpe_postprocess(v, bpe_type=bpe_type)
