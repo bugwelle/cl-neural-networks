@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 
-# Example usage:
-#  ./create_train_dataset.py /opt/cv-corpus-7.0-2021-07-21/de/ --output_path=/home/andre/Projects/uni/cl-neural-networks/data/
-#
-
 import argparse
 import matplotlib.pyplot as plt
-import os
 import torchaudio
 import torchaudio.transforms as T
 import torch
