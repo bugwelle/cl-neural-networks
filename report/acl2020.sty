@@ -351,8 +351,9 @@
 \def\rightoffset{17.5cm} %original: 500pt
 \ifaclfinal\else\pagenumbering{arabic}
 \AddToShipoutPicture{%
-\ifaclfinal\else
+% ÄNDERUNG ANDRE
 \AtPageLowishCenter{\textcolor{black}{\thepage}}
+\ifaclfinal\else % ÄNDERUNG ANDRE
 \aclruleroffset=\textheight
 \advance\aclruleroffset4pt
   \AtTextUpperLeft{% 
