@@ -18,8 +18,8 @@ def visualize_audio_file(input_path):
 
     waveform, sample_rate = torchaudio.load(input_path)
 
-    plot_waveform(waveform, sample_rate, input_path)
-    plot_specgram(waveform, sample_rate, input_path)
+    plot_waveform(waveform, sample_rate)
+    plot_specgram(waveform, sample_rate)
 
     # See https://pytorch.org/tutorials/beginner/audio_preprocessing_tutorial.html#mfcc
     n_fft = 2048
@@ -86,7 +86,7 @@ def plot_specgram(waveform, sample_rate, title="Spectrogram", xlim=None):
 
 def plot_spectrogram(spec, title=None, ylabel='freq_bin', aspect='auto', xmax=None):
     fig, axs = plt.subplots(1, 1)
-    axs.set_title(title or 'Spectrogram (db)')
+    axs.set_title(title or 'MFCC Spectrogram (db)')
     axs.set_ylabel(ylabel)
     axs.set_xlabel('frame')
     im = axs.imshow(librosa.power_to_db(spec), origin='lower', aspect=aspect)
