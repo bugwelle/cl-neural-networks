@@ -177,9 +177,13 @@ def validate_on_data(cfg, model: Model, data: Dataset,
             current_valid_score = 0
             if eval_metric.lower() == 'bleu':
                 # this version does not use any tokenization
-                current_valid_score = bleu(
-                    valid_hypotheses, valid_references,
-                    tokenize=sacrebleu["tokenize"])
+                if cfg["type"] == "audio":
+                    current_valid_score = bleu(
+                            valid_hypotheses, valid_references)
+                else:
+                    current_valid_score = bleu(
+                        valid_hypotheses, valid_references,
+                        tokenize=sacrebleu["tokenize"])
             elif eval_metric.lower() == 'chrf':
                 current_valid_score = chrf(valid_hypotheses, valid_references,
                     remove_whitespace=sacrebleu["remove_whitespace"])
