@@ -15,7 +15,7 @@ data:
     train: "data"
     dev: "data"
     test: "data"
-    level: "word"
+    level: "char"
     lowercase: True
     max_sent_length: 25
     src_voc_min_freq: 0
