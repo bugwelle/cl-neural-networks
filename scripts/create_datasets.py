@@ -45,6 +45,7 @@ def create_dataset(input_path, input_tsv_name, output_path, output_tsv_name, out
         shutil.copyfile(src, dst)
 
     print(f"Finished. You can use 'tar -czvf {output_folder_name}.tar.gz ./{output_folder_name}' to create an archive of all files.")
+    print("Note, you have to replace punctuation and quotes yourself.")
 
 def main():
 
