@@ -1,0 +1,7 @@
+@misc{rmm2021,
+    title = {Speech2Text in JoeyNMT},
+    author = {Fleige, Robin and Machmeier, Stefan  and Andre, Meyering},
+    howpublished = {\url{https://github.com/bugwelle/cl-neural-networks}}
+    month = sep,
+    year = "2021"
+}
