@@ -8,6 +8,7 @@ authors:
   orcid: "https://orcid.org/0000-0002-7028-1755"
 - family-names: "Andre"
   given-names: "Meyering"
+  orcid: "https://orcid.org/0000-0002-7973-0369"
 title: "Speech2Text in JoeyNMT"
 version: 1.0.0
 date-released: 2021-09-31
