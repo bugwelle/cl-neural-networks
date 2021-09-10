@@ -5,3 +5,17 @@
     month = sep,
     year = "2021"
 }
+cff-version: 1.2.0
+message: "If you want to refer to this work, please cite it as below."
+authors:
+- family-names: "Robin"
+  given-names: "Fleige"
+- family-names: "Stefan"
+  given-names: "Machmeier"
+  orcid: "https://orcid.org/0000-0002-7028-1755"
+- family-names: "Andre"
+  given-names: "Meyering"
+title: "Speech2Text in JoeyNMT"
+version: 1.0.0
+date-released: 2021-09-31
+url: "https://github.com/bugwelle/cl-neural-networks"
