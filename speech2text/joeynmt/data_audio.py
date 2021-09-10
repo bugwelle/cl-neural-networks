@@ -144,23 +144,33 @@ class MonoAudioDataset(Dataset):
     def sort_key(ex):
         return len(ex.src)
 
-    def __init__(self, path: str, field, tsv_name: str, **kwargs) -> None:
+    def __init__(self, path: str, tsv_name: str, field, **kwargs) -> None:
         examples = []
+
+        if hasattr(path, "readline"):  # special usage: stdin
+            for src_line in path:
+                src_line = src_line.strip()
+                if src_line != '':
+                    path = src_line
+                    break
         
         fields = [('src', field)]
 
-        self._path = os.fspath(path)
-        self._tsv = os.path.join(self._path, f"{tsv_name}.tsv")
-        self._clips = os.path.join(self._path, f"{tsv_name}_audio")
-        
-        examples = []
+        if path.endswith(".mp3"):
+            features = load_and_process_commonvoice_item(path)
+            examples.append(data.Example.fromlist( [features], fields ))
+        else:
+            self._path = os.fspath(path)
+            self._tsv = os.path.join(self._path, f"{tsv_name}.tsv")
+            self._clips = os.path.join(self._path, f"{tsv_name}_audio")
 
-        with open(self._tsv, "r") as tsv_:
-            walker = csv.reader(tsv_, delimiter="\t")
-            for index, line in enumerate(walker):
-                # Note: We simply ignore the line content.
-                features = load_and_process_commonvoice_item(self._clips, index)
-                examples.append(data.Example.fromlist( [features], fields ))
+            with open(self._tsv, "r") as tsv_:
+                walker = csv.reader(tsv_, delimiter="\t")
+                for index, line in enumerate(walker):
+                    # Note: We simply ignore the line content.
+                    filename = os.path.join(self._clips, f"{index}.mp3")
+                    features = load_and_process_commonvoice_item(filename)
+                    examples.append(data.Example.fromlist( [features], fields ))
 
         super().__init__(examples, fields, **kwargs)
 
@@ -197,15 +207,15 @@ class AudioDataset(Dataset):
         with open(self._tsv, "r") as tsv_:
             walker = csv.reader(tsv_, delimiter="\t")
             for index, line in enumerate(walker):
-                features = load_and_process_commonvoice_item(self._clips, index)
+                filename = os.path.join(self._clips, f"{index}.mp3")
+                features = load_and_process_commonvoice_item(filename)
                 examples.append(data.Example.fromlist( [features, line[0]], fields ))
 
         super().__init__(examples, fields, **kwargs)
 
 # Taken from https://github.com/pytorch/audio/blob/8a347b62cf5c907d2676bdc983354834e500a282/torchaudio/datasets/commonvoice.py#L12
 # This is a modified version.
-def load_and_process_commonvoice_item(clips_folder: str, index) -> Tuple[Tensor, int, Dict[str, str]]:
-    filename = os.path.join(clips_folder, f"{index}.mp3")
+def load_and_process_commonvoice_item(filename: str) -> Tuple[Tensor, int, Dict[str, str]]:
     waveform, sample_rate = torchaudio.load(filename)
 
     dic = dict(path=filename)

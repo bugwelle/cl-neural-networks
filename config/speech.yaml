@@ -48,7 +48,7 @@ training:
     overwrite: True
     shuffle: True
     use_cuda: False
-    max_output_length: 30
+    max_output_length: 75
     print_valid_sents: [0, 3, 6]
     keep_last_ckpts: 2
 
@@ -66,17 +66,17 @@ model:
             scale: False
         hidden_size: 64
         bidirectional: True
-        dropout: 0.1
+        dropout: 0.2
         num_layers: 4
     decoder:
         rnn_type: "lstm"
         embeddings:
             embedding_dim: 256
             scale: False
-        hidden_size: 256
-        dropout: 0.1
-        hidden_dropout: 0.1
+        hidden_size: 512
+        dropout: 0.2
+        hidden_dropout: 0.2
         num_layers: 4
         input_feeding: True
         init_hidden: "zero"
-        attention: "luong"
+        attention: "bahdanau"

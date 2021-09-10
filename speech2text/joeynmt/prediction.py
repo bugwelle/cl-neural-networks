@@ -9,7 +9,7 @@ import logging
 import numpy as np
 
 import torch
-from torchtext.legacy.data import Dataset, Field
+from torchtext.legacy.data import Dataset, Field, RawField
 
 from joeynmt.helpers import bpe_postprocess, load_config, make_logger,\
     get_latest_checkpoint, load_checkpoint, store_attention_plots, \
@@ -19,7 +19,7 @@ from joeynmt.model import build_model, Model, _DataParallel
 from joeynmt.search import run_batch
 from joeynmt.batch import Batch
 from joeynmt.data import load_data, make_data_iter, MonoDataset
-from joeynmt.data_audio import load_audio_data
+from joeynmt.data_audio import load_audio_data, MonoAudioDataset
 from joeynmt.constants import UNK_TOKEN, PAD_TOKEN, EOS_TOKEN
 from joeynmt.vocabulary import Vocabulary
 
@@ -327,7 +327,7 @@ def test(cfg_file,
 
     # build model and load parameters into it
     model = build_model(cfg["model"], src_vocab=src_vocab, trg_vocab=trg_vocab)
-    model.load_state_dict(model_checkpoint["model_state"])
+    model.load_state_dict(model_checkpoint["model_state"], strict=False)
 
     if use_cuda:
         model.to(device)
@@ -416,7 +416,11 @@ def translate(cfg_file: str,
         with open(tmp_filename, "w", encoding="utf-8") as tmp_file:
             tmp_file.write("{}\n".format(line))
 
-        test_data = MonoDataset(path=tmp_name, ext=tmp_suffix,
+        if cfg["type"] == "audio":
+            test_data = MonoAudioDataset(path=tmp_name, tsv_name="",
+                                field=src_field)
+        else:
+            test_data = MonoDataset(path=tmp_name, ext=tmp_suffix,
                                 field=src_field)
 
         # remove temporary file
@@ -452,7 +456,13 @@ def translate(cfg_file: str,
     # read vocabs
     src_vocab_file = cfg["data"].get("src_vocab", model_dir + "/src_vocab.txt")
     trg_vocab_file = cfg["data"].get("trg_vocab", model_dir + "/trg_vocab.txt")
-    src_vocab = Vocabulary(file=src_vocab_file)
+    
+    if cfg["type"] == "audio": # see data_audio.py
+        src_vocab = Vocabulary(tokens=[]) # Note: The audio file does not have a vocabulary, so we fake one.
+        src_vocab.itos = []               #       We reset the array because "special" characters were inserted
+    else:
+        src_vocab = Vocabulary(file=src_vocab_file)
+    
     trg_vocab = Vocabulary(file=trg_vocab_file)
 
     data_cfg = cfg["data"]
@@ -461,11 +471,14 @@ def translate(cfg_file: str,
 
     tok_fun = lambda s: list(s) if level == "char" else s.split()
 
-    src_field = Field(init_token=None, eos_token=EOS_TOKEN,
-                      pad_token=PAD_TOKEN, tokenize=tok_fun,
-                      batch_first=True, lower=lowercase,
-                      unk_token=UNK_TOKEN,
-                      include_lengths=True)
+    if cfg["type"] == "audio":
+        src_field = RawField()
+    else:
+        src_field = Field(init_token=None, eos_token=EOS_TOKEN,
+                        pad_token=PAD_TOKEN, tokenize=tok_fun,
+                        batch_first=True, lower=lowercase,
+                        unk_token=UNK_TOKEN,
+                        include_lengths=True)
     src_field.vocab = src_vocab
 
     # parse test args
@@ -478,14 +491,19 @@ def translate(cfg_file: str,
 
     # build model and load parameters into it
     model = build_model(cfg["model"], src_vocab=src_vocab, trg_vocab=trg_vocab)
-    model.load_state_dict(model_checkpoint["model_state"])
+    model.load_state_dict(model_checkpoint["model_state"], strict=False)
 
     if use_cuda:
         model.to(device)
 
     if not sys.stdin.isatty():
+
         # input file given
-        test_data = MonoDataset(path=sys.stdin, ext="", field=src_field)
+        if cfg["type"] == "audio":
+            test_data = MonoAudioDataset(path=sys.stdin, tsv_name="", field=src_field)
+        else:
+            test_data = MonoDataset(path=sys.stdin, ext="", field=src_field)
+        
         all_hypotheses = _translate_data(test_data)
 
         if output_path is not None:
