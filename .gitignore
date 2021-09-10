@@ -3,6 +3,9 @@
 *.mp3
 speech_model/
 
+# IDEs
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
