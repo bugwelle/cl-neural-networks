@@ -40,7 +40,7 @@ training:
     patience: 5
     decrease_factor: 0.5
     early_stopping_metric: "eval_metric"
-    epochs: 1
+    epochs: 15
     validation_freq: 1000
     logging_freq: 100
     eval_metric: "bleu"
@@ -67,16 +67,16 @@ model:
         hidden_size: 64
         bidirectional: True
         dropout: 0.1
-        num_layers: 1
+        num_layers: 4
     decoder:
         rnn_type: "lstm"
         embeddings:
             embedding_dim: 256
             scale: False
-        hidden_size: 64
+        hidden_size: 256
         dropout: 0.1
         hidden_dropout: 0.1
-        num_layers: 1
+        num_layers: 4
         input_feeding: True
         init_hidden: "zero"
         attention: "luong"
