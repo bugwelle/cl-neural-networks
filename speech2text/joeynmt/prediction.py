@@ -162,7 +162,7 @@ def validate_on_data(cfg, model: Model, data: Dataset,
 
         # post-process
         if level == "bpe" and postprocess:
-            if cfg["type"] == "audio":
+            if cfg["type"] != "audio":
                 valid_sources = [bpe_postprocess(s, bpe_type=bpe_type)
                                  for s in valid_sources]
             valid_references = [bpe_postprocess(v, bpe_type=bpe_type)
