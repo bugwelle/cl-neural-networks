@@ -12,6 +12,38 @@ Our project is speech to text transformations using [JoeyNMT](https://github.com
 - [Scripts](./scripts) to process our data
 - [Speech2Text](./speech2text)
 
+## Results
+
+In totol, we trained three different models with the following hyperparameters:
+
+|         | Hyperparameter | Model A | Model B  | Model C  |
+|---------|----------------|---------|----------|----------|
+|         | RNN type       | LSTM    | LSTM     | LSTM     |
+|         | Learning rate  | 0.001   | 0.001    | 0.001    |
+|         | level          | char    | char     | char     |
+|         | scheduling     | plateau | plateau  | plateau  |
+|         | epochs         | 15      | 15       | 15       |
+| Encoder | layers         | 4       | 4        | 4        |
+|         | hidden size    | 64      | 64       | 64       |
+|         | dropout        | 0.1     | 0.2      | 0.2      |
+| Decoder | layers         | 4       | 4        | 4        |
+|         | hidden size    | 256     | 512      | 1024     |
+|         | dropout        | 0.1     | 0.2      | 0.2      |
+|         | hidden dropout | 0.1     | 0.2      | 0.2      |
+|         | attention      | luong   | bahdanau | bahdanau |
+
+
+Our results are listed below:
+
+
+| Model | Perplexity | BLEU  |
+|-------|------------|-------|
+| A     | 1.5715     | 8.78  |
+| B     | 1.5214     | 7.46  |
+| C     | 1.3049     | 11.70 |
+
+
+
 ## Setup
 
 ```sh
