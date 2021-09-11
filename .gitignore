@@ -1,5 +1,6 @@
 # Data
 *.tar.gz
+*.zip
 *.mp3
 speech_model*/
 
