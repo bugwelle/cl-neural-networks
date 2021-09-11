@@ -8,6 +8,7 @@
 \usepackage[english]{babel}
 
 \usepackage[hyperref]{acl2020}
+\usepackage[all]{hypcap}
 \usepackage{times}
 \usepackage{latexsym}
 \renewcommand{\UrlFont}{\ttfamily\small}
@@ -24,6 +25,8 @@
 \usepackage{subcaption}
 \usepackage{multirow}
 
+\usepackage{orcidlink}
+
 \aclfinalcopy % Uncomment this line for the final submission
 
 % \setlength\titlebox{5cm}
@@ -36,7 +39,7 @@
 
 \title{Speech2Text in JoeyNMT}
 
-\author{\small Stefan Machmeier \\
+\author{\small Stefan Machmeier\,\orcidlink{0000-0002-7028-1755} \\
   \small Department of Computer Science \\
   \small Heidelberg University, Germany \\
   \small \textit{tz251@stud.uni-heidelberg.de} \\
@@ -46,7 +49,7 @@
   \small Heidelberg University, Germany \\
   \small \textit{lq250@stud.uni-heidelberg.de} \\
   \And
-  \small Andre Meyering \\
+  \small Andre Meyering\,\orcidlink{0000-0002-7973-0369} \\
   \small Department of Computer Science \\
   \small Heidelberg University, Germany \\
   \small \textit{hp250@stud.uni-heidelberg.de} \\}
@@ -63,53 +66,62 @@ We achieve this by including Torchaudio, the audio counterpart of the Torchtext 
 \end{abstract}
 
 \section{Introduction}
-
-JoeyNMT is an open source project for neural machine
-translation (NMT) that aims to be easy to understand while implementing modern approaches. This gives beginners the possibility to quickly and easily understand the architecture and customize individual parts to experiment with the behavior.
-In this thesis the possibility to use JoeyNMT for processing speech to text is worked out. For this purpose, the Mel Frequency Cepstral Coefficients (MFCC) of the audio files is used as input for JoeyNMT. As datasets we use audio from the common voice project, where it is possible to filter by language, accent and quality, so that uniform data can be used.
+In this paper the possibility to use JoeyNMT for processing speech to text is worked out.
+Instead of translating text to text, we translate speech to text.
+For this purpose, the Mel Frequency Cepstral Coefficients (MFCC) of the audio files is used as input for JoeyNMT.
+As datasets we use audio files from the Common Voice project, where it is possible to filter by language, accent and quality, so that uniform data can be used.\todo{Ist dieser Satz notwendig?}
 
 \section{Related Work}
 
-Speech to text transformations are common but in context of JoeyNMT, we found that it references one project that does this.
-\enquote{Speech Joey}\cite{speech_joey} extends JoeyNMT with functionality for speech recognition and is written by Sariya Karimova\footnote{See \url{https://www.cl.uni-heidelberg.de/~karimova/}, last visited 2021-09-09}, a former graduate research assistant at the Statistical NLP group of the Heidelberg University.
+Speech to text transformations are common but in context of JoeyNMT, we found that it references only one project that works with audio files.
+\enquote{Speech Joey}~\cite{speechjoey} extends JoeyNMT with functionality for speech recognition and is written by Sariya Karimova\footnote{See \url{https://www.cl.uni-heidelberg.de/~karimova/}, last visited on 2021-09-09}, a former graduate research assistant at the Statistical NLP group of the Heidelberg University.
 However, the project does not run anymore due to breaking changes in the project's
-dependencies and missing versions in their list of dependencies.
+dependencies and missing explicit version numbers in their list of dependencies.
 Furthermore, after trying to install older versions of certain dependencies,
 we noticed that some were not available for more recent versions of Python such as 3.8 or 3.9.
 We still looked at the project as it was listed by JoeyNMT itself.
-In comparison to our project, Speech Joey uses \enquote{librosa}\footnote{See \url{https://librosa.org/doc/latest/index.html}, lasted visited 2021-09-09} whereas we use Torchaudio.
-The underlying transformations should still be very similar but we were unable to compare our results against Speech Joey.
+In comparison to our project\footnote{See \url{https://github.com/bugwelle/cl-neural-networks}, last visited on 2021-09-10}, Speech Joey uses \enquote{librosa}\footnote{See \url{https://librosa.org/doc/latest/index.html}, last visited on 2021-09-10}, whereas we use Torchaudio\footnote{See \url{https://github.com/pytorch/audio}, last visited 2021-09-10}.
+The underlying transformations should still be very similar but we were unable to compare our results against Speech Joey due to the issues mentioned earlier.
 
 
 \section{JoeyNMT}
-
-\todo{Was zu JoeyNMT schreiben? Oder aus der Einleitung was raus nehmen?}
+JoeyNMT is an open source project for neural machine
+translation (NMT) that aims to be easy to understand while implementing modern approaches.
+This gives beginners the possibility to quickly and easily understand the architecture and customize individual parts to experiment with the behavior.
+Since JoeyNMT's goal is to be as simple to understand as possible, they are guided by the 80/20 approach, which in this case means they want to enable 80\% of the functionality with 20\% of the code.
+JoeyNMT implements a Recurrent Neural Network(RNN) encoder-decoder using Gated Recurrent Unit (GRU) or Long Short Term Memory (LSTM) units.
+It also provides the possibility to use either a multi-layer perceptron or a blilinear interpolation as attention function.
+Also JoeyNMT supports word based, char based and also Byte Pair Encoding (BPE) based encodings.
+In the configuration file that JoeyNMT provides, you can adjust the hyperparameters of the Neural Network. 
+\cite{DBLP:journals/corr/abs-1907-12484}
 
 \section{Speech To Text}
 
-\todo{Grundsätzlich was zu speech2text schreiben.}
+Speech to Text is a process that converts speech in audio form to text. 
+This is used in many different areas today, for example in the generation of subtitles for accessibility or for digital assistants such as Alexa, Siri, Cortana or Google Home.
 
 \subsection{Feature Extraction}
 
 As audio files are just binary blobs and cannot be worked with as text,
 we cannot work with JoeyNMT's existing feature extractions for text.
 
-For audio processing, there are multiple common ways to represent audio signals.
-One common visualization is the waveform representation as can be seen in \autoref{fig:1021_waveform}.
+For audio processing, there are multiple common ways to represent audio signals in a way that features can be easily extracted.
+One common way is the waveform representation as can be seen in \autoref{fig:1021_waveform} on \autopageref{fig:1021_waveform} for one of our training audio files.
 The figure visualizes amplitude changes over time.
-Its benefit lies in the detection audio detection, where values near zero indicate silent sounds and larger amplitudes indicate louder sounds.
-It can be used to detect pauses between spoken words and it is possible to detect voiced and unvoiced sounds and even certain vowels can be detected~\cite{Comer_1162014}.
+Its benefit lies in the audio detection, where values near zero indicate silence
+and larger amplitudes indicate louder sounds.
+It can not only be used to detect pauses between spoken words, but it is also possible to detect voiced and unvoiced sounds and even certain vowels can be detected~\cite{Comer_1162014}.
 
 Another way to visualize audio signals are Spectrograms, as can be seen in \autoref{fig:1021_spectrogramm}.
 The waveform is visualized as a Spectrogram and shows more details of the audio signals, or rather, it shows the spectrum of frequencies over time.
 Oftentimes, the Mel frequency spectrum is used~\cite{MelFreq} as this represents the human audio perception.
 
 However, there are further frequency transformations of audio signals
-that can be used to translate spoken to written words.
+that can be used to better extract features to translate spoken to written words.
 
 According to Wang and Lawlor, \enquote{MFCC is one of more the successful methods} for speech to text systems which is \enquote{based on the human peripheral auditory system}~\cite{Wang_7983644}.
 Therefore, MFCC (short for Mel Frequency Cepstral Coefficients) is another transformation that yields good results for speech recognition.
-\autoref{fig:1021_mfcc} shows the resulting Spectrogram after applying MFCC.
+\autoref{fig:1021_mfcc} shows the resulting spectrogram after applying MFCC.
 We note that there are possibilities to improve results even more, as described in \cite{Winursito_8350748}.
 
 We refer to \cite{ittichaichareon2012speech} and \cite{singh2014approach} for a detailed description of MFCC.
@@ -143,8 +155,8 @@ We refer to \cite{ittichaichareon2012speech} and \cite{singh2014approach} for a 
 \label{subsec:dataset}
 
 The dataset used throughout this paper is the open \enquote{Common Voice Corpus 7.0} dataset by Mozilla~\cite{commonvoice:2020}.
-We have chosen the German language as that's what the authors are most familiar with which allows us to better evaluate the dataset quality.
-The unprocessed dataset contains 26\,GB of audio files which 1035\,h according to \enquote{Common Voice}.
+We have chosen the German language as that's what the authors are most familiar with, which allows us to better evaluate the dataset quality.
+The unprocessed dataset contains 26\,GB of audio files which 1035 hours of spoken text according to \enquote{Common Voice}.
 
 After listening to few audio files, the authors decided to filter the dataset for one major reason:
 There were audio files that had accents that made it hard to understand even for native speakers.
@@ -157,71 +169,93 @@ Therefore, all audio files were filtered according to these rules:
 \begin{itemize}
     \item max. 75 characters
     \item no accent and no Swiss- or Austrian-German
-    \item male voice
-    \item no special characters in the corresponding text\newline 
+    \item only male voices
+    \item no special characters in the corresponding text;\newline 
           this include punctuation such as \texttt{.,!?} and quotation marks
-    \item lowercasing characters in the corresponding texts
+    \item lower-casing all characters in the corresponding texts
 \end{itemize}
 
 Having these limitations makes it easier to rule out issues during evaluation.
 
-However, these limitations yield only about 7500 audio files for training and around 100 for testing and evaluation.  On top of this, the quality of audio files still differs enormously.  Whereas some have crystal clear voices, other have lot of noise and even contain mouse-click or keyboard sounds.
+However, these limitations yield only about 7500 audio files for training and around 100 for testing and evaluation.
+On top of this, the quality of audio files still differs significantly.
+Whereas some have crystal clear voices, other have lot of noise and even contain mouse-click or keyboard sounds.
 
 
 \section{Results and Discussion}
+The result of our work is a model that extracts text from audio files. 
+To see the concrete results, the Translate function can be used with an audio file as input.
+The result of this Translate function is reasonably good for the resources we had available.
+Hardly any of the sentences is understood completely correctly, but the output text often sounds very similar to the input and the output consists almost exclusively of correct words.
+Therefore, we can assume that our result works and that the validity would increase significantly with a larger data set as well as more epochs.
+The following examples show the different qualities of outputs very well:
+1. An (almost) correctly recognized sentence:
+2. An incorrectly recognized sentence with acoustic similarity to the correct result:
+3. A wrongly recognized sentence without acoustic similarity:
 
-We compared two different models. \autoref{tab:parameters} lists all important hyperparameters. As a basis we chose the default JoeyNMT configuration, and adapted the hidden size, and layers for decoder and encoder. As previously mention, we limited our self to MFCC only. Each model will be compared by the best validation perplexity (ppl) that have been achieved during training. Perplexity is a exponentiation of the entropy, and it tells us how well our natural language model predicts test data. A lower perplexity indicates a good prediction whereas a high perplexity indicates the opposite \cite{jozefowicz2016exploring}
+\todo{Beispielsätze vorbereiten, vergleichen mit Übersetzung; Analyse, was schief gelaufen ist; klingt ähnlich? Falsch geschrieben?}
 
-\begin{table}[]
-\centering
-\caption{Hyperparameters of both models. We only listed the most important ones.}
-\begin{tabular}{ll|l|l}
-                         & Hyperparameter & Model A  & Model B \\\hline
-                         & RNN type       & LSTM     & LSTM    \\
-                         & Learning rate  & $0.001$  & $0.001$ \\
-                         & level          & char     & char    \\
-                         & scheduling     & plateau  & plateau \\
-                         & epochs         & $30$     & $30$      \\\hline
-\multirow{3}{*}{Encoder} & layers         & $8$      & $8$       \\
-                         & hidden size    & $64$     & $64$      \\
-                         & dropout        & $0.1$    & $0.2$     \\\hline
-\multirow{5}{*}{Decoder} & layers         & $8$      & $8$       \\
-                         & hidden size    & $256$    & $512$     \\
-                         & dropout        & $0.1$    & $0.2$     \\
-                         & hidden dropout & $0.1$    & $0.2$     \\
-                         & attention      & luong    & bahdanau\\    
-\end{tabular}
-\label{tab:parameters}
+We compared two different models.
+\autoref{tab:parameters} lists all important hyperparameters.
+As a basis we chose a default configuration (model A), and adapted the hidden size, and layers for decoder and encoder.
+As previously mentioned, we limited ourselves to MFCC only.
+Each model will be compared by the best validation perplexity (ppl) and Bi-Lingual Evaluation Understudy (BLEU) score that have been achieved during training.
+Perplexity is an exponentiation of the entropy and it tells us how well our natural language model predicts test data.
+A lower perplexity indicates a good prediction whereas a high perplexity indicates the opposite~\cite{jozefowicz2016exploring}.
+BLEU is a quality metric score to compare machine translation.
+It uses the precision, and compares the appearances of the candidate, such as \textit{love} with any other reference translation~\cite{Papineni2002}.
+
+\begin{table}[ht]
+    \centering
+    \caption{Hyperparameters of both models. We only listed the most important ones. For a complete list of all hyperparameters, please refer to our GitHub repository}
+    \hspace*{-9mm} % For layout
+    \begin{tabular}{ll|l|l}
+                             & \textbf{Hyperparameter} & \textbf{Model A} & \textbf{Model B} \\\hline
+                             & RNN type       & LSTM     & LSTM    \\
+                             & Learning rate  & $0.001$  & $0.001$ \\
+                             & level          & char     & char    \\
+                             & scheduling     & plateau  & plateau \\
+                             & epochs         & $15$     & $15$      \\\hline
+    \multirow{3}{*}{Encoder} & layers         & $4$      & $4$       \\
+                             & hidden size    & $64$     & $64$      \\
+                             & dropout        & $0.1$    & $0.2$     \\\hline
+    \multirow{5}{*}{Decoder} & layers         & $4$      & $4$       \\
+                             & hidden size    & $256$    & $512$     \\
+                             & dropout        & $0.1$    & $0.2$     \\
+                             & hidden dropout & $0.1$    & $0.2$     \\
+                             & attention      & luong    & bahdanau  \\    
+    \end{tabular}
+    \label{tab:parameters}
 \end{table}
 
-Both models were trained on the same preprocessed dataset that has been described in \autoref{subsec:dataset}. Our idea was to have a basis that we try to improve by fine-tuning our hyperparameters. Specifically, we choose dropout, attention, and hidden size for model B. \autoref{tab:results} shows the achieved results. The first model reached . Increasing the hidden size of model b lead to 
+Both models were trained on the same preprocessed dataset that has been described in \autoref{subsec:dataset}.
+Our idea was to have a basis that we try to improve by fine-tuning our hyperparameters.
+Specifically, we adapted dropout, attention, and hidden size for model B. \autoref{tab:results} shows the achieved results.
+The first model reached a perplexity of $1.57$ with a BLEU score of $8.78$. This was a surprisingly good result, and we assume that the thorough preprocessing of the \enquote{Common Voice Corpus 7.0} contributed mainly to it.
+\autoref{fig:train_loss_a} shows a steady decrease of the  training loss, same applies to \autoref{fig:train_ppl_a}.
+BLEU score in \autoref{fig:train_score_a} keeps increasing after each epoch. All these indicates that we do not have overfitting yet, and our perplexity is far from a saturation.
+We hope that model B will converge faster within 15 epochs, so that we obtain better results.
+Increasing the hidden size of model B, changing the dropout, and the attention lead to a perplexity of $1.63$ with a BLEU score of $3.79$.
+We assume that the increase of the hidden size has an impact to this result.
+As for model A, \autoref{fig:train_loss_b} shows a stead decrease of the training loss.
+\autoref{fig:train_ppl_b}, and \autoref{fig:train_score_b} show a similar curve to the ones of model A.
+Therefore, we assume that the current results in \autoref{tab:results} can be improved by training more epochs, and that for both models a saturation is expected much later.
 
-\begin{table}[]
+\begin{table}[ht]
     \centering
-    \caption{Results}
-    \begin{tabular}{c|c}
-        Model & Perplexity\\
+    \caption{Results of model A and B. The best validation result during training has been used.}
+    \begin{tabular}{c|cc}
+        \textbf{Model} & \textbf{Perplexity} & \textbf{BLEU} \\
         \hline
-        A     &  \\
-        B     & 
+        A     &  $1.5715$  & $8.78$ \\
+        B     &  $1.6352$  & $3.79$ \\
     \end{tabular}
-    
     \label{tab:results}
 \end{table}
 
-%\begin{figure*}
-%    \centering
-%    \includegraphics[width=\textwidth]{joeynmt-speech2text/images/train_loss.png}
-%    \caption{Training loss over 30 epochs. The orange line is the loss for the training set.}
-%    \label{fig:train_loss}
-%\end{figure*}
+For future work, we would try different audio transformations such as MelSpectrogram (composition of MelScale and Spectrogram), or MelScale. However, for this report, we only focused on MFCC, so for us the influence of audio transformations would be an interesting question to answer.
 
-%\begin{figure*}
-%    \centering
-%    \includegraphics[width=\textwidth]{joeynmt-speech2text/images/val_loss.png}
-%    \caption{Test loss over 30 epochs. The orange line is the loss for the test set.}
-%    \label{fig:val_loss}
-%\end{figure*}
+
 
 \bibliography{acl2020}
 \bibliographystyle{acl_natbib}
@@ -229,10 +263,60 @@ Both models were trained on the same preprocessed dataset that has been describe
 \appendix
 
 \section{Appendices}
-TODO
+
+In addition, we have added a plot for loss, perplexity (ppl), and BLEU score for each model.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_A/train_loss.png}
+    \caption{Model A: training loss over 15 epochs. The orange line is the loss for the training set.}
+    \label{fig:train_loss_a}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_A/train_score.png}
+    \caption{Model A: training BLEU score over 15 epochs. The orange line is the BLEU score for the test set.}
+    \label{fig:train_score_a}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_A/train_ppl.png}
+    \caption{Model A: training perplexity (ppl) over 15 epochs. The orange line is the perplexity for the test set.}
+    \label{fig:train_ppl_a}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_B/train_loss.png}
+    \caption{Model B: training loss over 15 epochs. The orange line is the loss for the training set.}
+    \label{fig:train_loss_b}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_B/train_score.png}
+    \caption{Model B: training BLEU score over 15 epochs. The orange line is the BLEU score for the test set.}
+    \label{fig:train_score_b}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_B/train_ppl.png}
+    \caption{Model B: training perplexity (ppl) over 15 epochs. The orange line is the perplexity for the test set.}
+    \label{fig:train_ppl_b}
+\end{figure}
 
 \section{Supplemental Material}
 \label{sec:supplemental}
-TODO
+
+Our code is publicly available at GitHub: \url{https://github.com/bugwelle/cl-neural-networks}\\
+
+In addition, all trained models are available until the end of October 2021:
+\begin{enumerate}
+    \item Model A: \url{https://drive.google.com/file/d/1-B5UHHfXEVUBuHNghQMrRHq1QZyXjXgK/view?usp=sharing}
+    \item Model B: \url{https://drive.google.com/file/d/1-Jz9Vn62Z18FqmHy_KusGXOIvWQbLiCq/view?usp=sharing}
+\end{enumerate}
 
 \end{document}
