@@ -3,6 +3,15 @@
 This repository is our project for the seminar "Introduction to Neural Networks and Sequence-To-Sequence Learning" at the Heidelberg University.
 Our project is speech to text transformations using [JoeyNMT](https://github.com/joeynmt/joeynmt.git).
 
+## Table of Contents
+
+- Run our approach in [colab](./colab)
+- See our [configurations](./config) for each model
+- Our [data](./data) also includes [results](./data/results) of our models
+- See [report](./report) for more details
+- [Scripts](./scripts) to process our data
+- [Speech2Text](./speech2text)
+
 ## Setup
 
 ```sh
