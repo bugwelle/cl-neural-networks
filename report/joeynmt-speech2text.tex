@@ -24,7 +24,7 @@
 \usepackage{hyperref}
 \usepackage{subcaption}
 \usepackage{multirow}
-
+\usepackage{booktabs}
 \usepackage{orcidlink}
 
 \aclfinalcopy % Uncomment this line for the final submission
@@ -60,16 +60,16 @@
 \maketitle
 \begin{abstract}
 In this paper we are looking into speech to text transformations using the JoeyNMT neural machine translation toolkit.
-We adapt JoeyNMT's existing code base to additionally handle audio files.
+We adapt JoeyNMT's existing code base to additionally handle audio files that are then translated to text.
 We achieve this by including Torchaudio, the audio counterpart of the Torchtext project which is heavily used by JoeyNMT.
-\todo{Nicht vollständig}
+Even a small dataset shows promising results.
 \end{abstract}
 
 \section{Introduction}
-In this paper the possibility to use JoeyNMT for processing speech to text is worked out.
+In this paper an approach to use JoeyNMT for processing speech to text is worked out.
 Instead of translating text to text, we translate speech to text.
 For this purpose, the Mel Frequency Cepstral Coefficients (MFCC) of the audio files is used as input for JoeyNMT.
-As datasets we use audio files from the Common Voice project, where it is possible to filter by language, accent and quality, so that uniform data can be used.\todo{Ist dieser Satz notwendig?}
+As dataset we use audio files from the Common Voice project for the German language.
 
 \section{Related Work}
 
@@ -80,18 +80,18 @@ dependencies and missing explicit version numbers in their list of dependencies.
 Furthermore, after trying to install older versions of certain dependencies,
 we noticed that some were not available for more recent versions of Python such as 3.8 or 3.9.
 We still looked at the project as it was listed by JoeyNMT itself.
-In comparison to our project\footnote{See \url{https://github.com/bugwelle/cl-neural-networks}, last visited on 2021-09-10}, Speech Joey uses \enquote{librosa}\footnote{See \url{https://librosa.org/doc/latest/index.html}, last visited on 2021-09-10}, whereas we use Torchaudio\footnote{See \url{https://github.com/pytorch/audio}, last visited 2021-09-10}.
+In comparison to our project\footnote{See \url{https://github.com/bugwelle/cl-neural-networks}, last visited on 2021-09-10}, Speech Joey uses \enquote{librosa}\footnote{See \url{https://librosa.org/doc/latest/index.html}, last visited on 2021-09-10}, whereas we use Torchaudio\footnote{See \url{https://github.com/pytorch/audio}, last visited on 2021-09-10}.
 The underlying transformations should still be very similar but we were unable to compare our results against Speech Joey due to the issues mentioned earlier.
 
 
 \section{JoeyNMT}
 JoeyNMT is an open source project for neural machine
-translation (NMT) that aims to be easy to understand while implementing modern approaches.
+translation~(NMT) that aims to be easy to understand while implementing modern approaches.
 This gives beginners the possibility to quickly and easily understand the architecture and customize individual parts to experiment with the behavior.
 Since JoeyNMT's goal is to be as simple to understand as possible, they are guided by the 80/20 approach, which in this case means they want to enable 80\% of the functionality with 20\% of the code.
-JoeyNMT implements a Recurrent Neural Network(RNN) encoder-decoder using Gated Recurrent Unit (GRU) or Long Short Term Memory (LSTM) units.
-It also provides the possibility to use either a multi-layer perceptron or a blilinear interpolation as attention function.
-Also JoeyNMT supports word based, char based and also Byte Pair Encoding (BPE) based encodings.
+JoeyNMT implements a Recurrent Neural Network~(RNN) encoder-decoder using Gated Recurrent Unit~(GRU) or Long Short Term Memory~(LSTM) units.
+It also provides the possibility to use either a multi-layer perceptron or a bilinear interpolation as attention function.
+Also JoeyNMT supports word based, character based and also Byte Pair Encoding~(BPE) based encodings.
 In the configuration file that JoeyNMT provides, you can adjust the hyperparameters of the Neural Network. 
 \cite{DBLP:journals/corr/abs-1907-12484}
 
@@ -170,34 +170,41 @@ Therefore, all audio files were filtered according to these rules:
     \item max. 75 characters
     \item no accent and no Swiss- or Austrian-German
     \item only male voices
-    \item no special characters in the corresponding text;\newline 
+    \item no special characters in the corresponding texts;\newline 
           this include punctuation such as \texttt{.,!?} and quotation marks
     \item lower-casing all characters in the corresponding texts
 \end{itemize}
 
 Having these limitations makes it easier to rule out issues during evaluation.
 
-However, these limitations yield only about 7500 audio files for training and around 100 for testing and evaluation.
+However, these limitations yield only about 8300 audio files for training and around 100 for testing and evaluation.
 On top of this, the quality of audio files still differs significantly.
 Whereas some have crystal clear voices, other have lot of noise and even contain mouse-click or keyboard sounds.
-
+Moreover, many audio files that we checked still had accents that were not part of the audio's metadata.
 
 \section{Results and Discussion}
 The result of our work is a model that extracts text from audio files. 
-To see the concrete results, the Translate function can be used with an audio file as input.
-The result of this Translate function is reasonably good for the resources we had available.
-Hardly any of the sentences is understood completely correctly, but the output text often sounds very similar to the input and the output consists almost exclusively of correct words.
-Therefore, we can assume that our result works and that the validity would increase significantly with a larger data set as well as more epochs.
-The following examples show the different qualities of outputs very well:
-1. An (almost) correctly recognized sentence:
-2. An incorrectly recognized sentence with acoustic similarity to the correct result:
-3. A wrongly recognized sentence without acoustic similarity:
+To see the concrete results, the translate function of JoeyNMT can be used with an audio file as input.
+The result of this translate function is reasonably good for the resources we had available.
+Hardly any of the sentences is understood completely correctly, but the output text often sounds similar to the input and the output consists almost exclusively of correct words.
+Therefore, we can assume that our resulting model works and that the validity would increase significantly with a larger data set as well as more epochs.
+For example, the audio file with the content \enquote{wir sollten uns nicht auf ihn verlassen} is translated to \enquote{wir sollten uns nicht auf den ersten weltkrieg der lasten} when using one of our models.
+This sentence shows strengths and weaknesses of our speech to text program.
+First of all, the beginning is translated correctly as \enquote{wir sollten uns nicht} is spoken without any accent or noise in the audio file.
+The end, that is, \enquote{verlassen} and \enquote{der lasten}, sound phonetically similar if spoken fast and without emphasis on the \textit{d} and \textit{t}.
+However, the part in the middle is incorrect and we didn't find an explanation for it.
+There is no sound in the audio file that could be interpreted as \enquote{ersten weltkrieg} if a person listens to it.
+We noticed a similar trend in some other sentences as well where
+the start and end of a sentence is translated correctly but the middle part contains words that were not spoken.\todo{Stefan, lies mich}
 
-\todo{Beispielsätze vorbereiten, vergleichen mit Übersetzung; Analyse, was schief gelaufen ist; klingt ähnlich? Falsch geschrieben?}
+%The following examples show the different qualities of outputs very well:
+%1. An (almost) correctly recognized sentence: \enquote{TODO}
+%2. An incorrectly recognized sentence with acoustic similarity to the correct result: \enquote{TODO}
+%3. A wrongly recognized sentence without acoustic similarity: \enquote{TODO}
 
-We compared two different models.
+We compared three different models.
 \autoref{tab:parameters} lists all important hyperparameters.
-As a basis we chose a default configuration (model A), and adapted the hidden size, and layers for decoder and encoder.
+As a basis we chose a default configuration (model A), and adapted the hidden size and layers for decoder and encoder.
 As previously mentioned, we limited ourselves to MFCC only.
 Each model will be compared by the best validation perplexity (ppl) and Bi-Lingual Evaluation Understudy (BLEU) score that have been achieved during training.
 Perplexity is an exponentiation of the entropy and it tells us how well our natural language model predicts test data.
@@ -205,50 +212,59 @@ A lower perplexity indicates a good prediction whereas a high perplexity indicat
 BLEU is a quality metric score to compare machine translation.
 It uses the precision, and compares the appearances of the candidate, such as \textit{love} with any other reference translation~\cite{Papineni2002}.
 
-\begin{table}[ht]
+\begin{table*}[ht]
     \centering
     \caption{Hyperparameters of both models. We only listed the most important ones. For a complete list of all hyperparameters, please refer to our GitHub repository}
-    \hspace*{-9mm} % For layout
-    \begin{tabular}{ll|l|l}
-                             & \textbf{Hyperparameter} & \textbf{Model A} & \textbf{Model B} \\\hline
-                             & RNN type       & LSTM     & LSTM    \\
-                             & Learning rate  & $0.001$  & $0.001$ \\
-                             & level          & char     & char    \\
-                             & scheduling     & plateau  & plateau \\
-                             & epochs         & $15$     & $15$      \\\hline
-    \multirow{3}{*}{Encoder} & layers         & $4$      & $4$       \\
-                             & hidden size    & $64$     & $64$      \\
-                             & dropout        & $0.1$    & $0.2$     \\\hline
-    \multirow{5}{*}{Decoder} & layers         & $4$      & $4$       \\
-                             & hidden size    & $256$    & $512$     \\
-                             & dropout        & $0.1$    & $0.2$     \\
-                             & hidden dropout & $0.1$    & $0.2$     \\
-                             & attention      & luong    & bahdanau  \\    
+    %\hspace*{-9mm} % For layout if in one column
+    \begin{tabular}{ll|l|l|l}
+                          \toprule
+                             & \textbf{Hyperparameter} & \textbf{Model A} & \textbf{Model B} & \textbf{Model C} \\\midrule
+                             & RNN type       & LSTM     & LSTM    & LSTM     \\
+                             & Learning rate  & $0.001$  & $0.001$ & $0.001$  \\
+                             & level          & char     & char    & char     \\
+                             & scheduling     & plateau  & plateau & plateau  \\
+                             & epochs         & $15$     & $15$    & $15$     \\\midrule
+    \multirow{3}{*}{Encoder} & layers         & $4$      & $4$     & $4$      \\
+                             & hidden size    & $64$     & $64$    & $64$     \\
+                             & dropout        & $0.1$    & $0.2$   & $0.2$    \\\midrule
+    \multirow{5}{*}{Decoder} & layers         & $4$      & $4$     & $4$      \\
+                             & hidden size    & $256$    & \textit{512}   & \textit{1024}    \\
+                             & dropout        & $0.1$    & \textit{0.2}    & $0.2$    \\
+                             & hidden dropout & $0.1$    & \textit{0.2}    & $0.2$   \\
+                             & attention      & luong    & \textit{bahdanau} & bahdanau  \\    
+                             \bottomrule
     \end{tabular}
     \label{tab:parameters}
-\end{table}
+\end{table*}
 
-Both models were trained on the same preprocessed dataset that has been described in \autoref{subsec:dataset}.
+All models were trained on the same preprocessed dataset that has been described in \autoref{subsec:dataset}.
 Our idea was to have a basis that we try to improve by fine-tuning our hyperparameters.
-Specifically, we adapted dropout, attention, and hidden size for model B. \autoref{tab:results} shows the achieved results.
-The first model reached a perplexity of $1.57$ with a BLEU score of $8.78$. This was a surprisingly good result, and we assume that the thorough preprocessing of the \enquote{Common Voice Corpus 7.0} contributed mainly to it.
+Specifically, we adapted dropout, attention, and hidden size for model B.
+For model C, we increased the hidden size even further.
+\autoref{tab:results} shows the achieved results.
+The first model reached a perplexity of $1.57$ with a BLEU score of $8.78$.
+This was a surprisingly good result, and we assume that the thorough preprocessing of the \enquote{Common Voice Corpus 7.0} contributed mainly to it.
 \autoref{fig:train_loss_a} shows a steady decrease of the  training loss, same applies to \autoref{fig:train_ppl_a}.
-BLEU score in \autoref{fig:train_score_a} keeps increasing after each epoch. All these indicates that we do not have overfitting yet, and our perplexity is far from a saturation.
+BLEU score in \autoref{fig:train_score_a} keeps increasing after each epoch.
+All this indicates that we do not have overfitting yet, and our perplexity is far from a saturation.
 We hope that model B will converge faster within 15 epochs, so that we obtain better results.
-Increasing the hidden size of model B, changing the dropout, and the attention lead to a perplexity of $1.63$ with a BLEU score of $3.79$.
+Increasing the hidden size of model B, changing the dropout, and the attention lead to a perplexity of $1.63$ with a BLEU score of $7.46$.\todo{Model C}
 We assume that the increase of the hidden size has an impact to this result.
 As for model A, \autoref{fig:train_loss_b} shows a stead decrease of the training loss.
 \autoref{fig:train_ppl_b}, and \autoref{fig:train_score_b} show a similar curve to the ones of model A.
-Therefore, we assume that the current results in \autoref{tab:results} can be improved by training more epochs, and that for both models a saturation is expected much later.
+Therefore, we assume that the current results in \autoref{tab:results} can be improved by training more epochs, and that for all three models a saturation is expected much later.
 
 \begin{table}[ht]
     \centering
     \caption{Results of model A and B. The best validation result during training has been used.}
     \begin{tabular}{c|cc}
+        \toprule
         \textbf{Model} & \textbf{Perplexity} & \textbf{BLEU} \\
-        \hline
+        \midrule
         A     &  $1.5715$  & $8.78$ \\
-        B     &  $1.6352$  & $3.79$ \\
+        B     &  $1.5214$  & $7.46$ \\
+        C     &  $1.3049$  & $11.70$  \\
+        \bottomrule
     \end{tabular}
     \label{tab:results}
 \end{table}
@@ -262,52 +278,6 @@ For future work, we would try different audio transformations such as MelSpectro
 
 \appendix
 
-\section{Appendices}
-
-In addition, we have added a plot for loss, perplexity (ppl), and BLEU score for each model.
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_A/train_loss.png}
-    \caption{Model A: training loss over 15 epochs. The orange line is the loss for the training set.}
-    \label{fig:train_loss_a}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_A/train_score.png}
-    \caption{Model A: training BLEU score over 15 epochs. The orange line is the BLEU score for the test set.}
-    \label{fig:train_score_a}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_A/train_ppl.png}
-    \caption{Model A: training perplexity (ppl) over 15 epochs. The orange line is the perplexity for the test set.}
-    \label{fig:train_ppl_a}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_B/train_loss.png}
-    \caption{Model B: training loss over 15 epochs. The orange line is the loss for the training set.}
-    \label{fig:train_loss_b}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_B/train_score.png}
-    \caption{Model B: training BLEU score over 15 epochs. The orange line is the BLEU score for the test set.}
-    \label{fig:train_score_b}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.5\textwidth]{joeynmt-speech2text/images/results_B/train_ppl.png}
-    \caption{Model B: training perplexity (ppl) over 15 epochs. The orange line is the perplexity for the test set.}
-    \label{fig:train_ppl_b}
-\end{figure}
-
 \section{Supplemental Material}
 \label{sec:supplemental}
 
@@ -315,8 +285,88 @@ Our code is publicly available at GitHub: \url{https://github.com/bugwelle/cl-ne
 
 In addition, all trained models are available until the end of October 2021:
 \begin{enumerate}
-    \item Model A: \url{https://drive.google.com/file/d/1-B5UHHfXEVUBuHNghQMrRHq1QZyXjXgK/view?usp=sharing}
-    \item Model B: \url{https://drive.google.com/file/d/1-Jz9Vn62Z18FqmHy_KusGXOIvWQbLiCq/view?usp=sharing}
+    \item Model A: \newline \url{https://drive.google.com/file/d/1-IH2Kq502HC9cbv9Cgp7pGQtxg14amPA/view?usp=sharing}
+    \item Model B: \newline \url{https://drive.google.com/file/d/1-LIxgsjLxbjxD3EbmNirjk09tms_yYEY/view?usp=sharing}
+    \item Model C: \newline \url{https://drive.google.com/file/d/1fPK2DCX17DsMa_XmsV8QEw8FhS9swXuw/view?usp=sharing}
 \end{enumerate}
+
+\section{Appendices}
+
+In addition, we have added a plot for loss, perplexity (ppl), and BLEU score for each model.
+
+\begin{figure*}[ht]
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{joeynmt-speech2text/images/results_A/train_loss.png}
+        \caption{Training loss over 15 epochs. The orange line is the loss for the training set.}
+        \label{fig:train_loss_a}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{joeynmt-speech2text/images/results_A/train_score.png}
+        \caption{Training BLEU score over 15 epochs. The orange line is the BLEU score for the test set.}
+        \label{fig:train_score_a}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{joeynmt-speech2text/images/results_A/train_ppl.png}
+        \caption{Training perplexity (ppl) over 15 epochs. The orange line is the perplexity for the test set.}
+        \label{fig:train_ppl_a}
+    \end{subfigure}
+    \caption{Model A}
+    \label{fig:model_a_loss_ppl_score}
+\end{figure*}
+
+\begin{figure*}[ht]
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{joeynmt-speech2text/images/results_B/train_loss.png}
+        \caption{Training loss over 15 epochs. The orange line is the loss for the training set.}
+        \label{fig:train_loss_b}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{joeynmt-speech2text/images/results_B/train_score.png}
+        \caption{Training BLEU score over 15 epochs. The orange line is the BLEU score for the test set.}
+        \label{fig:train_score_b}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{joeynmt-speech2text/images/results_B/train_ppl.png}
+        \caption{Training perplexity (ppl) over 15 epochs. The orange line is the perplexity for the test set.}
+        \label{fig:train_ppl_b}
+    \end{subfigure}
+    \caption{Model B}
+    \label{fig:model_b_loss_ppl_score}
+\end{figure*}
+
+\begin{figure*}[ht]
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{joeynmt-speech2text/images/results_C/train_loss.png}
+        \caption{Training loss over 22 epochs. The orange line is the loss for the training set.}
+        \label{fig:train_loss_c}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{joeynmt-speech2text/images/results_C/train_score.png}
+        \caption{Training BLEU score over 22 epochs. The orange line is the BLEU score for the test set.}
+        \label{fig:train_score_c}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{joeynmt-speech2text/images/results_C/train_ppl.png}
+        \caption{Training perplexity (ppl) over 22 epochs. The orange line is the perplexity for the test set.}
+        \label{fig:train_ppl_c}
+    \end{subfigure}
+    \caption{Model C}
+    \label{fig:model_c_loss_ppl_score}
+\end{figure*}
 
 \end{document}
