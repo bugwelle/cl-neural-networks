@@ -195,12 +195,7 @@ The end, that is, \enquote{verlassen} and \enquote{der lasten}, sound phonetical
 However, the part in the middle is incorrect and we didn't find an explanation for it.
 There is no sound in the audio file that could be interpreted as \enquote{ersten weltkrieg} if a person listens to it.
 We noticed a similar trend in some other sentences as well where
-the start and end of a sentence is translated correctly but the middle part contains words that were not spoken.\todo{Stefan, lies mich}
-
-%The following examples show the different qualities of outputs very well:
-%1. An (almost) correctly recognized sentence: \enquote{TODO}
-%2. An incorrectly recognized sentence with acoustic similarity to the correct result: \enquote{TODO}
-%3. A wrongly recognized sentence without acoustic similarity: \enquote{TODO}
+the start and end of a sentence is translated correctly but the middle part contains words that were not spoken.
 
 We compared three different models.
 \autoref{tab:parameters} lists all important hyperparameters.
@@ -214,24 +209,24 @@ It uses the precision, and compares the appearances of the candidate, such as \t
 
 \begin{table*}[ht]
     \centering
-    \caption{Hyperparameters of both models. We only listed the most important ones. For a complete list of all hyperparameters, please refer to our GitHub repository}
+    \caption{Hyperparameters of all models. We only listed the most important ones. For a complete list of all hyperparameters, please refer to our GitHub repository}
     %\hspace*{-9mm} % For layout if in one column
     \begin{tabular}{ll|l|l|l}
                           \toprule
                              & \textbf{Hyperparameter} & \textbf{Model A} & \textbf{Model B} & \textbf{Model C} \\\midrule
-                             & RNN type       & LSTM     & LSTM    & LSTM     \\
+                             & RNN type       & \textsc{LSTM}     & \textsc{LSTM}    & \textsc{LSTM}     \\
                              & Learning rate  & $0.001$  & $0.001$ & $0.001$  \\
-                             & level          & char     & char    & char     \\
-                             & scheduling     & plateau  & plateau & plateau  \\
-                             & epochs         & $15$     & $15$    & $15$     \\\midrule
-    \multirow{3}{*}{Encoder} & layers         & $4$      & $4$     & $4$      \\
-                             & hidden size    & $64$     & $64$    & $64$     \\
-                             & dropout        & $0.1$    & $0.2$   & $0.2$    \\\midrule
-    \multirow{5}{*}{Decoder} & layers         & $4$      & $4$     & $4$      \\
-                             & hidden size    & $256$    & \textit{512}   & \textit{1024}    \\
-                             & dropout        & $0.1$    & \textit{0.2}    & $0.2$    \\
-                             & hidden dropout & $0.1$    & \textit{0.2}    & $0.2$   \\
-                             & attention      & luong    & \textit{bahdanau} & bahdanau  \\    
+                             & level          & \textsc{char}     & \textsc{char}    & \textsc{char}     \\
+                             & scheduling     & \textsc{plateau}  & \textsc{plateau} & \textsc{plateau}  \\
+                             & epochs         & $15$     & $15$    & $22$      \\\midrule
+    \multirow{3}{*}{Encoder} & layers         & $4$      & $4$     & $4$       \\
+                             & hidden size    & $64$     & $64$    & $64$      \\
+                             & dropout        & $0.1$    & $0.2$   & $0.2$     \\\midrule
+    \multirow{5}{*}{Decoder} & layers         & $4$      & $4$     & $4$       \\
+                             & hidden size    & $256$    & $512$   & $1024$    \\
+                             & dropout        & $0.1$    & $0.2$   & $0.2$     \\
+                             & hidden dropout & $0.1$    & $0.2$   & $0.2$     \\
+                             & attention      & \textsc{luong}    & \textsc{bahdanau} & \textsc{bahdanau}  \\    
                              \bottomrule
     \end{tabular}
     \label{tab:parameters}
@@ -246,12 +241,16 @@ The first model reached a perplexity of $1.57$ with a BLEU score of $8.78$.
 This was a surprisingly good result, and we assume that the thorough preprocessing of the \enquote{Common Voice Corpus 7.0} contributed mainly to it.
 \autoref{fig:train_loss_a} shows a steady decrease of the  training loss, same applies to \autoref{fig:train_ppl_a}.
 BLEU score in \autoref{fig:train_score_a} keeps increasing after each epoch.
-All this indicates that we do not have overfitting yet, and our perplexity is far from a saturation.
+All this indicates that we do not have overfitting yet, and our perplexity is far from saturation.
 We hope that model B will converge faster within 15 epochs, so that we obtain better results.
-Increasing the hidden size of model B, changing the dropout, and the attention lead to a perplexity of $1.63$ with a BLEU score of $7.46$.\todo{Model C}
+Increasing the hidden size of model B, changing the dropout, and the attention lead to a perplexity of $1.63$ with a BLEU score of $7.46$.
 We assume that the increase of the hidden size has an impact to this result.
-As for model A, \autoref{fig:train_loss_b} shows a stead decrease of the training loss.
-\autoref{fig:train_ppl_b}, and \autoref{fig:train_score_b} show a similar curve to the ones of model A.
+As for model A, \autoref{fig:train_loss_b} shows a steady decrease of the training loss.
+\autoref{fig:train_ppl_b} and \autoref{fig:train_score_b} show a similar curve to the ones of model A.
+To backup our assumption, we trained an extra model C with a hidden size of $1024$.
+Besides the $12$ hours of training for $22$ epochs, the results were decent for the rather limited amount of epochs.
+We achieved a perplexity of $1.3$ with a BLEU score of $11.70$.
+See \autoref{fig:model_c_loss_ppl_score} in comparison to \autoref{fig:model_a_loss_ppl_score} and \autoref{fig:model_b_loss_ppl_score}.  
 Therefore, we assume that the current results in \autoref{tab:results} can be improved by training more epochs, and that for all three models a saturation is expected much later.
 
 \begin{table}[ht]
@@ -278,6 +277,8 @@ For future work, we would try different audio transformations such as MelSpectro
 
 \appendix
 
+\clearpage
+
 \section{Supplemental Material}
 \label{sec:supplemental}
 
@@ -285,16 +286,19 @@ Our code is publicly available at GitHub: \url{https://github.com/bugwelle/cl-ne
 
 In addition, all trained models are available until the end of October 2021:
 \begin{enumerate}
-    \item Model A: \newline \url{https://drive.google.com/file/d/1-IH2Kq502HC9cbv9Cgp7pGQtxg14amPA/view?usp=sharing}
-    \item Model B: \newline \url{https://drive.google.com/file/d/1-LIxgsjLxbjxD3EbmNirjk09tms_yYEY/view?usp=sharing}
-    \item Model C: \newline \url{https://drive.google.com/file/d/1fPK2DCX17DsMa_XmsV8QEw8FhS9swXuw/view?usp=sharing}
+    \item Model A: \newline
+        \url{https://drive.google.com/file/d/1-IH2Kq502HC9cbv9Cgp7pGQtxg14amPA/view?usp=sharing}
+    \item Model B: \newline
+        \url{https://drive.google.com/file/d/1-LIxgsjLxbjxD3EbmNirjk09tms_yYEY/view?usp=sharing}
+    \item Model C: \newline
+        \url{https://drive.google.com/file/d/1fPK2DCX17DsMa_XmsV8QEw8FhS9swXuw/view?usp=sharing}
 \end{enumerate}
 
 \section{Appendices}
 
 In addition, we have added a plot for loss, perplexity (ppl), and BLEU score for each model.
 
-\begin{figure*}[ht]
+\begin{figure*}[htb]
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{joeynmt-speech2text/images/results_A/train_loss.png}
